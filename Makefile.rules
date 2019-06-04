@@ -1,0 +1,43 @@
+REAL_LINKFLAGS =
+REAL_LINKFLAGS_R =
+
+ifeq ($(COMMAND),$(CXX))
+	REAL_LINKFLAGS = $(LINKFLAGS) $(LINKFLAGS_EXTERN) $(LIBRARY)
+	REAL_LINKFLAGS_R = $(LINKFLAGS_R) $(LINKFLAGS_EXTERN) $(LIBRARY)
+endif
+
+
+$(TARGET) : $(OBJ_FILES) $(DEP_FILES)
+	$(COMMAND) -o $@ $(OBJ_FILES) $(REAL_LINKFLAGS)
+
+$(TARGET_R) : $(OBJ_FILES_R) $(DEP_FILES_R)
+	$(COMMAND) -o $@ $(OBJ_FILES_R) $(REAL_LINKFLAGS_R)
+
+%.o : %.cpp
+	$(CXX) -c -o $@ $< $(CXXFLAGS) $(CXXFLAGS_EXTERN) $(INCLUDE)
+%.ro : %.cpp
+	$(CXX) -c -o $@ $< $(CXXFLAGS_R) $(CXXFLAGS_EXTERN) $(INCLUDE)
+
+
+%.d : %.cpp
+	$(CXX) -MM $< > $@ $(INCLUDE)
+%.rd : %.cpp
+	$(CXX) -MM $< > $@ $(INCLUDE)
+	sed -i 's/.o:/.ro:/' $@
+
+sinclude $(DEP_FILES)
+sinclude $(DEP_FILES_R)
+
+
+.PHONY: all clean depend
+
+all : $(TARGET) $(TARGET_R)
+
+clean :
+	$(RM) $(OBJ_FILES) $(OBJ_FILES_R)
+	$(RM) $(DEP_FILES) $(DEP_FILES_R)
+	$(RM) $(TARGET) $(TARGET_R)
+
+depend : $(DEP_FILES) $(DEP_FILES_R)
+	@echo update depend files:$(DEP_FILES) $(DEP_FILES_R)
+
